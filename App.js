@@ -3,6 +3,8 @@ import HomeScreen from "./screens/HomeScreen";
 import MapScreen from "./screens/MapScreen";
 import {createBottomTabNavigator} from "@react-navigation/bottom-tabs";
 import { Ionicons } from '@expo/vector-icons';
+import FavoritesScreen from "./screens/FavoritesScreen";
+import SettingsScreen from "./screens/SettingsScreen";
 
 const Tab = createBottomTabNavigator();
 export default function App() {
@@ -19,6 +21,16 @@ export default function App() {
                       <Ionicons name="map" size={size} color={color} />
                   ),
               }}/>
+                <Tab.Screen name="Favorites" component={FavoritesScreen} options={{
+                    tabBarIcon: ({ color, size }) => (
+                        <Ionicons name="heart" size={size} color={color} />
+                    ),
+                }}/>
+                <Tab.Screen name="Settings" component={SettingsScreen} options={{
+                    tabBarIcon: ({ color, size }) => (
+                        <Ionicons name="settings" size={size} color={color} />
+                    ),
+                }}/>
             </Tab.Navigator>
           </NavigationContainer>
       );
