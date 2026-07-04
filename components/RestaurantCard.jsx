@@ -1,22 +1,26 @@
 import {Text, View} from "react-native";
 import {StyleSheet} from "react-native";
 import FavoriteButton from "./FavoriteButton";
+import {useContext} from "react";
+import {ThemeContext} from "../contexts/ThemeContext";
 
 export default function RestaurantCard({ restaurant, favorites, onToggleFavorite, onClose }) {
+    const { theme } = useContext(ThemeContext);
+
     return(
-        <View style={styles.bottomCard}>
+        <View style={[styles.bottomCard, {backgroundColor: theme.background}]}>
             <View style={styles.flexbox}>
-                <Text style={styles.title}>{restaurant.name}</Text>
+                <Text style={[styles.title, {color: theme.text}]}>{restaurant.name}</Text>
 
-                <Text>{restaurant.category} • ⭐ {restaurant.rating}</Text>
+                <Text style={{color: theme.text}}>{restaurant.category} • ⭐ {restaurant.rating}</Text>
 
-                <Text>Open: {restaurant.hours}</Text>
+                <Text style={{color: theme.text}}>Open: {restaurant.hours}</Text>
             </View>
 
             <View style={styles.actions}>
                 <FavoriteButton isFavorite={favorites.includes(restaurant.id)} onPress={() => onToggleFavorite(restaurant.id)}/>
 
-                <Text onPress={onClose} style={{ marginTop: 10, color: "blue" }}>
+                <Text onPress={onClose} style={{ marginTop: 10, color: theme.text }}>
                     Sluiten
                 </Text>
             </View>

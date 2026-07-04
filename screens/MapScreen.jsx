@@ -1,12 +1,14 @@
 import {StyleSheet, View} from "react-native";
 import MapView from "react-native-maps";
-import {useEffect, useRef, useState} from "react";
+import {useContext, useEffect, useRef, useState} from "react";
 import * as Location from "expo-location";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { fetchData } from "../utils/fetcher";
 import RestaurantMarker from "../components/RestaurantMarker";
 import RestaurantCard from "../components/RestaurantCard";
 import {useRoute} from "@react-navigation/native";
+import {ThemeContext} from "../contexts/ThemeContext";
+import {darkMapStyle} from "../contexts/themes";
 
 function MapScreen() {
     const mapRef = useRef(null);
@@ -17,6 +19,7 @@ function MapScreen() {
     const fetchUrl = "https://raw.githubusercontent.com/ThijsVanLoo1/restaurant-hotspots/main/restaurants.json?";
     const route = useRoute();
     const markerRefs = useRef({});
+    const { theme, darkMode } = useContext(ThemeContext);
 
     //Ask permission & view own location
     async function getCurrentLocation() {
@@ -116,25 +119,26 @@ function MapScreen() {
     }, [route.params]);
 
     return(
-        <View>
+        <View style={[styles.screen, { backgroundColor: theme.background }]}>
             <MapView ref={mapRef} style={styles.map}
-                region={{
-                    latitude: location ? location.latitude : 51.7550,
-                    longitude: location ? location.longitude : 4.1680,
-                    latitudeDelta: 0.075,
-                    longitudeDelta: 0.075
-                }}
-                showsUserLocation={true}>
-                {restaurants.map((item) => (
-                    <RestaurantMarker
-                        key={item.id}
-                        item={item}
-                        onSelect={setSelectedRestaurant}
-                        markerRef={(ref) => {
-                            markerRefs.current[item.id] = ref;
-                        }}
-                    />
-                ))}
+                     customMapStyle={darkMode ? darkMapStyle : []}
+                    region={{
+                        latitude: location ? location.latitude : 51.7550,
+                        longitude: location ? location.longitude : 4.1680,
+                        latitudeDelta: 0.075,
+                        longitudeDelta: 0.075
+                    }}
+                    showsUserLocation={true}>
+                    {restaurants.map((item) => (
+                        <RestaurantMarker
+                            key={item.id}
+                            item={item}
+                            onSelect={setSelectedRestaurant}
+                            markerRef={(ref) => {
+                                markerRefs.current[item.id] = ref;
+                            }}
+                        />
+                    ))}
             </MapView>
             {selectedRestaurant && (
                 <RestaurantCard
@@ -149,6 +153,9 @@ function MapScreen() {
 }
 
 const styles = StyleSheet.create({
+    screen: {
+        flex: 1,
+    },
     map: {
         width: '100%',
         height: '100%',
