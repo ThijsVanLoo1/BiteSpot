@@ -3,7 +3,7 @@ import MapView from "react-native-maps";
 import {useContext, useEffect, useRef, useState} from "react";
 import * as Location from "expo-location";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { fetchData } from "../utils/fetcher";
+import {fetchData} from "../utils/fetcher";
 import RestaurantMarker from "../components/RestaurantMarker";
 import RestaurantCard from "../components/RestaurantCard";
 import {useRoute} from "@react-navigation/native";
@@ -19,11 +19,17 @@ function MapScreen() {
     const fetchUrl = "https://raw.githubusercontent.com/ThijsVanLoo1/restaurant-hotspots/main/restaurants.json?";
     const route = useRoute();
     const markerRefs = useRef({});
-    const { theme, darkMode } = useContext(ThemeContext);
+    const {theme, darkMode} = useContext(ThemeContext);
+    const INITIAL_REGION = {
+        latitude: 51.7550,
+        longitude: 4.1680,
+        latitudeDelta: 0.075,
+        longitudeDelta: 0.075,
+    };
 
     //Ask permission & view own location
     async function getCurrentLocation() {
-        let { status } = await Location.requestForegroundPermissionsAsync();
+        let {status} = await Location.requestForegroundPermissionsAsync();
         if (status !== 'granted') {
             return;
         }
@@ -70,14 +76,32 @@ function MapScreen() {
         }
     }
 
+    async function loadRestaurants() {
+        try {
+            // Laadt eerst restaurants uit AsyncStorage
+            const cached = await AsyncStorage.getItem("restaurants");
+
+            if (cached !== null) {
+                setRestaurants(JSON.parse(cached));
+            }
+
+            // Altijd proberen te refreshen als internet er is
+            const data = await fetchData(fetchUrl);
+
+            // Nieuwe data tonen en opnieuw opslaan in AsyncStorage
+            setRestaurants(data);
+            await AsyncStorage.setItem("restaurants", JSON.stringify(data));
+
+            // Geen internet (of crash)
+        } catch (e) {
+            console.log("Offline mode actief of error:", e);
+        }
+    }
+
     useEffect(() => {
         getCurrentLocation();
         loadFavorites();
-
-        (async () => {
-            const restaurants = await fetchData(fetchUrl);
-            setRestaurants(restaurants);
-        })();
+        loadRestaurants();
     }, []);
 
     useEffect(() => {
@@ -118,27 +142,22 @@ function MapScreen() {
         }, 600);
     }, [route.params]);
 
-    return(
-        <View style={[styles.screen, { backgroundColor: theme.background }]}>
+    return (
+        <View style={[styles.screen, {backgroundColor: theme.background}]}>
             <MapView ref={mapRef} style={styles.map}
                      customMapStyle={darkMode ? darkMapStyle : []}
-                    region={{
-                        latitude: location ? location.latitude : 51.7550,
-                        longitude: location ? location.longitude : 4.1680,
-                        latitudeDelta: 0.075,
-                        longitudeDelta: 0.075
-                    }}
-                    showsUserLocation={true}>
-                    {restaurants.map((item) => (
-                        <RestaurantMarker
-                            key={item.id}
-                            item={item}
-                            onSelect={setSelectedRestaurant}
-                            markerRef={(ref) => {
-                                markerRefs.current[item.id] = ref;
-                            }}
-                        />
-                    ))}
+                     initialRegion={INITIAL_REGION}
+                     showsUserLocation={true}>
+                {restaurants.map((item) => (
+                    <RestaurantMarker
+                        key={item.id}
+                        item={item}
+                        onSelect={setSelectedRestaurant}
+                        markerRef={(ref) => {
+                            markerRefs.current[item.id] = ref;
+                        }}
+                    />
+                ))}
             </MapView>
             {selectedRestaurant && (
                 <RestaurantCard
